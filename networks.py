@@ -19,22 +19,27 @@ class Network:
             X = layer.activations
         
         
-    def gradient_descent(self, X: np.ndarray, Y: np.ndarray, epochs: int, learning_rate: float, loss_function: neuralpy.Function):
+    def gradient_descent(self, X: np.ndarray, Y: np.ndarray, epochs: int, learning_rate: float, loss_function: neuralpy.Function, batch_size: int):
         n = X.shape[1]
+        batch_indexes = np.arange(0, n, batch_size)
+        X_batches = np.hsplit(X, batch_indexes)
+        Y_batches = np.hsplit(Y, batch_indexes)
         
         for iteration in range(epochs):
-            self.forward_propagation(X)
-            last_layer = self.layers[-1]
-            dEda = loss_function.derivative(last_layer.activations, Y)
-            dadz = last_layer.activation_function.derivative(last_layer.z_values)
-            dEdz = dEda*dadz
-                        
-            for index in range(len(self.layers)):
-                index = -(index+1)
-                layer = self.layers[index]
-                input_activations = self.layers[index-1].activations if index != -len(self.layers) else X
-                prev_layer = self.layers[index-1] if index != -len(self.layers) else None
-                dEdz = layer.backward_propagation(prev_layer, input_activations, dEdz, n, learning_rate)                
+            for X_batch, Y_batch in zip(X_batches, Y_batches):
+                X, Y = X_batch, Y_batch
+                self.forward_propagation(X)
+                last_layer = self.layers[-1]
+                dEda = loss_function.derivative(last_layer.activations, Y)
+                dadz = last_layer.activation_function.derivative(last_layer.z_values)
+                dEdz = dEda*dadz
+                            
+                for index in range(len(self.layers)):
+                    index = -(index+1)
+                    layer = self.layers[index]
+                    input_activations = self.layers[index-1].activations if index != -len(self.layers) else X
+                    prev_layer = self.layers[index-1] if index != -len(self.layers) else None
+                    dEdz = layer.backward_propagation(prev_layer, input_activations, dEdz, n, learning_rate)                
 
     
     def output(self, X: np.ndarray):
@@ -46,5 +51,4 @@ class Network:
         Y_hat = self.output(X)
         n = X.shape[1]
         return np.sum(loss_function(Y_hat, Y))/n
-    
-    
+
