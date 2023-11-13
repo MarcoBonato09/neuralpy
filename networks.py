@@ -20,16 +20,16 @@ class Network:
         
         
     def gradient_descent(self, X: np.ndarray, Y: np.ndarray, epochs: int, learning_rate: float, loss_function: neuralpy.Function, batch_size: int):
-        n = X.shape[1]
+        n = X.shape[1] # Amount of training examples
         batch_indexes = np.arange(0, n, batch_size)
         X_batches = np.hsplit(X, batch_indexes)
         Y_batches = np.hsplit(Y, batch_indexes)
-        
         for iteration in range(epochs):
-            for X_batch, Y_batch in zip(X_batches, Y_batches):
-                X, Y = X_batch, Y_batch
+            for i in range(len(batch_indexes)):
+                X, Y = X_batches[i+1], Y_batches[i+1]
                 self.forward_propagation(X)
                 last_layer = self.layers[-1]
+                
                 dEda = loss_function.derivative(last_layer.activations, Y)
                 dadz = last_layer.activation_function.derivative(last_layer.z_values)
                 dEdz = dEda*dadz
@@ -51,4 +51,5 @@ class Network:
         Y_hat = self.output(X)
         n = X.shape[1]
         return np.sum(loss_function(Y_hat, Y))/n
-
+    
+    
